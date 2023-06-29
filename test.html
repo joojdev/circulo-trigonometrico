@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <canvas id="screen"></canvas>
+  <script type="module">
+    import { Canvas, Cross, Circle, Square, Enum } from './main.js';
+    const SCREEN_WIDTH = 500
+    const SCREEN_HEIGHT = 500
+    const CIRCLE_RADIUS = 150
+
+    const screen = new Canvas('#screen', SCREEN_WIDTH, SCREEN_HEIGHT)
+
+    function drawCartesianPlane() {
+      const cross = new Cross(SCREEN_WIDTH, SCREEN_HEIGHT, '#000000')
+      cross.animateDraw(screen.context, 30, 1000).then(() => {
+        const circle = new Circle(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, CIRCLE_RADIUS, '#ff0000')
+        circle.animateDraw(screen.context, 100, 1000).then(async () => {
+          const t = new Square(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, CIRCLE_RADIUS, 30, '#0000ff')
+          const fv = new Square(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, CIRCLE_RADIUS, 45, '#00ff00')
+          const s = new Square(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, CIRCLE_RADIUS, 60, '#ff00ff')
+          await t.animateDrawDashedLines(screen.context, 200, 25)
+          await fv.animateDrawDashedLines(screen.context, 200, 25)
+          await s.animateDrawDashedLines(screen.context, 200, 25)
+          await t.animateDrawLines(screen.context, Enum.SINE, 30, 1000, 1, 2)
+          await fv.animateDrawLines(screen.context, Enum.SINE, 30, 1000, 2, 2)
+          await s.animateDrawLines(screen.context, Enum.SINE, 30, 1000, 3, 2)
+          await t.animateDrawLines(screen.context, Enum.COSSINE, 30, 1000, 3, 2)
+          await fv.animateDrawLines(screen.context, Enum.COSSINE, 30, 1000, 2, 2)
+          await s.animateDrawLines(screen.context, Enum.COSSINE, 30, 1000, 1, 2)
+        })
+      })
+    }
+
+    drawCartesianPlane()
+  </script>
+</body>
+</html>

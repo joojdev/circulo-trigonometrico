@@ -4,10 +4,251 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Círculo Trigonométrico</title>
-  <script src="./main.js" defer></script>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <canvas id="screen"></canvas>
+  <table id="data" border="1" class="hidden">
+    <thead>
+      <tr>
+        <th>πovezan</th>
+        <th>30°</th>
+        <th>45°</th>
+        <th>60°</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Seno</td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>Cosseno</td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <script type="module">
+    import { Canvas, Cross, Circle, Square, Enum, wait } from './main.js'
+
+    const SCREEN_WIDTH = 500
+    const SCREEN_HEIGHT = 500
+    const CIRCLE_RADIUS = 150
+
+    const screen = new Canvas('#screen', SCREEN_WIDTH, SCREEN_HEIGHT)
+
+    const cross = new Cross(SCREEN_WIDTH, SCREEN_HEIGHT, '#333')
+    const circle = new Circle(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, CIRCLE_RADIUS, '#c45149')
+
+    const thirty = new Square(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, CIRCLE_RADIUS, 30, '#49c480')
+    const fortyFive = new Square(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, CIRCLE_RADIUS, 45, '#4974c4')
+    const sixty = new Square(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, CIRCLE_RADIUS, 60, '#c449a7')
+    
+    function renewTable(data) {
+      const tableElement = document.querySelector('#data')
+
+      tableElement.children[1].remove()
+      
+      const tbody = document.createElement('tbody')
+
+      const tr1 = document.createElement('tr')
+      const seno = document.createElement('td')
+      seno.textContent = 'Seno'
+      tr1.append(seno)
+
+      let length1 = 0
+      if (data[0]) {
+        length1 = data[0].length
+        for (const [numerator, denominator] of data[0]) {
+          const td = document.createElement('td')
+          td.innerHTML = [
+            `${numerator == 1 ? '' : '√'}${numerator}`,
+            '—',
+            denominator
+          ].join('<br>')
+          tr1.append(td)
+        }
+      }
+
+      for (let i = 1; i <= 3 - length1; i++) {
+        const td = document.createElement('td')
+        tr1.append(td)
+      }
+
+      const tr2 = document.createElement('tr')
+      const cosseno = document.createElement('td')
+      cosseno.textContent = 'Cosseno'
+      tr2.append(cosseno)
+      
+      let length2 = 0
+      if (data[1]) {
+        length2 = data[1].length
+        for (const [numerator, denominator] of data[1]) {
+          const td = document.createElement('td')
+          td.innerHTML = [
+            `${numerator == 1 ? '' : '√'}${numerator}`,
+            '—',
+            denominator
+          ].join('<br>')
+          tr2.append(td)
+        }
+      }
+
+      for (let i = 1; i <= 3 - length2; i++) {
+        const td = document.createElement('td')
+        tr2.append(td)
+      }
+
+      tbody.append(tr1)
+      tbody.append(tr2)
+      tableElement.append(tbody)
+    }
+
+    async function drawCrossAndCircle() {
+      await cross.animateDraw(screen.context, 30, 1000)
+      await circle.animateDraw(screen.context, 100, 1000)
+    }
+
+    async function drawFamily(square) {
+      await square.animateDrawDashedLines(screen.context, 400, 25)
+    }
+
+    async function drawSine(square, numerator, denominator) {
+      await square.animateDrawLines(screen.context, Enum.SINE, 30, 1000, numerator, denominator)
+    }
+
+    async function drawCossine(square, numerator, denominator) {
+      await square.animateDrawLines(screen.context, Enum.COSSINE, 30, 1000, numerator, denominator)
+    }
+
+    async function reset() {
+      await screen.context.clear(1000, () => {
+        cross.draw(screen.context)
+        circle.draw(screen.context)
+  
+        let list = [thirty, fortyFive, sixty]
+  
+        list.forEach((square) => {
+          square.drawDashedLines(screen.context, 25)
+        })
+      })
+    }
+
+    const buttons = [
+      {
+        label: 'Desenhar plano cartesiano e círculo',
+        onClick: drawCrossAndCircle
+      },
+      {
+        label: 'Desenhar família do 30°',
+        onClick: () => drawFamily(thirty)
+      },
+      {
+        label: 'Desenhar família do 45°',
+        onClick: () => drawFamily(fortyFive)
+      },
+      {
+        label: 'Desenhar família do 60°',
+        onClick: () => drawFamily(sixty)
+      },
+      {
+        label: 'Mostrar seno do 30°',
+        onClick: () => drawSine(thirty, 1, 2)
+      },
+      {
+        label: 'Mostrar seno do 45°',
+        onClick: () => drawSine(fortyFive, 2, 2)
+      },
+      {
+        label: 'Mostrar seno do 60°',
+        onClick: () => drawSine(sixty, 3, 2)
+      },
+      {
+        label: 'Mostrar cosseno do 30°',
+        onClick: async () => {
+          await reset()
+          await wait(200)
+          await drawCossine(thirty, 3, 2)
+        }
+      },
+      {
+        label: 'Mostrar cosseno do 45°',
+        onClick: () => drawCossine(fortyFive, 2, 2)
+      },
+      {
+        label: 'Mostrar cosseno do 60°',
+        onClick: () => drawCossine(sixty, 1, 2)
+      },
+      {
+        label: 'Repetir e extrair dados',
+        onClick: async () => {
+          await reset()
+          document.querySelector('#data').classList.remove('hidden')
+          await wait(200)
+
+          let list = [
+            {
+              square: thirty,
+              sine: [1, 2],
+              cossine: [3, 2]
+            },
+            {
+              square: fortyFive,
+              sine: [2, 2],
+              cossine: [2, 2]
+            },
+            {
+              square: sixty,
+              sine: [3, 2],
+              cossine: [1, 2]
+            }
+          ]
+          
+          const tableData = [[], []]
+
+          for (const { square, sine, cossine } of list) {
+            await drawSine(square, sine[0], sine[1])
+            tableData[0].push([sine[0], sine[1]])
+            renewTable(tableData)
+            await wait(200)
+            await drawCossine(square, cossine[0], cossine[1])
+            tableData[1].push([cossine[0], cossine[1]])
+            renewTable(tableData)
+            await wait(200)
+          }
+        }
+      }
+    ]
+
+    function generateButton(index) {
+      const button = buttons[index]
+
+      const buttonElement = document.createElement('button')
+      buttonElement.textContent = button.label
+
+      if (button.classList) {
+        button.classList.forEach((item) => {
+          buttonElement.classList.add(item)
+        })
+      }
+
+
+      buttonElement.addEventListener('click', async () => {
+        buttonElement.remove()
+        await button.onClick()
+
+        if (!buttons[index + 1]) return
+        generateButton(index + 1)
+      })
+  
+      document.body.append(buttonElement)
+    }
+
+    generateButton(0)
+  </script>
 </body>
 </html>

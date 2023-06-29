@@ -8,14 +8,14 @@
 // me arrependo de ter bebido
 // que código horrível
 
-const Enum = {
+export const Enum = {
   SINE: 0,
   COSSINE: 1
 }
 
-const wait = async (delay) => new Promise((resolve) => setTimeout(resolve, delay))
+export const wait = async (delay) => new Promise((resolve) => setTimeout(resolve, delay))
 
-const degreeToRadiansText = (degree) => {
+export const degreeToRadiansText = (degree) => {
   let numerator = degree
   let denominator = 180
 
@@ -39,7 +39,7 @@ const degreeToRadiansText = (degree) => {
   ]
 }
 
-function Canvas(selector, width, height) {
+export function Canvas(selector, width, height) {
   this.selector = selector
   this.width = width
   this.height = height
@@ -48,13 +48,21 @@ function Canvas(selector, width, height) {
   this.element.width = this.width
   this.element.height = this.height
   this.context = this.element.getContext('2d')
+  this.context.fillStyle = 'white'
+  this.context.fillRect(0, 0, this.width, this.height)
+  this.context.fillStyle = '#000000'
 
-  this.context.clear = () => {
-    this.context.clearRect(0, 0, this.width, this.height)
+  this.context.clear = async (delay, redraw) => {
+    for (const index of Array(10).fill(null).map((_, index) => index)) {
+      this.context.fillStyle = 'rgba(255, 255, 255, 0.5)'
+      this.context.fillRect(0, 0, this.width, this.height)
+      redraw()
+      await wait (delay / 10)
+    }
   }
 }
 
-function Circle(x, y, radius, color) {
+export function Circle(x, y, radius, color) {
   this.x = x
   this.y = y
   this.radius = radius
@@ -84,7 +92,7 @@ function Circle(x, y, radius, color) {
   }
 }
 
-function Cross(width, height, color) {
+export function Cross(width, height, color) {
   this.width = width
   this.height = height
   this.color = color
@@ -129,7 +137,7 @@ function Cross(width, height, color) {
   }
 }
 
-function Square(x, y, radius, angle, color) {
+export function Square(x, y, radius, angle, color) {
   this.x = x
   this.y = y
   this.radius = radius
@@ -209,12 +217,13 @@ function Square(x, y, radius, angle, color) {
       context.beginPath()
       context.moveTo(this.x + lastPoint[0], this.y - lastPoint[1])
       context.lineTo(this.x + pointX, this.y - pointY)
-
+      
       lastPoint = [pointX, pointY]
       context.stroke()
 
       const text = degreeToRadiansText(angles[index])
       context.textAlign = 'center'
+      context.fillStyle = '#000000'
 
       for (let i = 0; i < text.length; i++) {
         context.fillText(text[i], this.x + pointX + textDirections[index][0] * offset, this.y - pointY - textDirections[index][1] * offset + i * 7)
@@ -249,6 +258,7 @@ function Square(x, y, radius, angle, color) {
     context.lineTo(end2.x, end2.y)
 
     context.stroke()
+    context.setLineDash([])
   }
 
   this.animateDrawLines = async (context, side, portions, duration, numerator, denominator) => {
@@ -411,32 +421,3 @@ function Square(x, y, radius, angle, color) {
     }
   }
 }
-
-const SCREEN_WIDTH = 500
-const SCREEN_HEIGHT = 500
-const CIRCLE_RADIUS = 150
-
-const screen = new Canvas('#screen', SCREEN_WIDTH, SCREEN_HEIGHT)
-
-function drawCartesianPlane() {
-  const cross = new Cross(SCREEN_WIDTH, SCREEN_HEIGHT, '#000000')
-  cross.animateDraw(screen.context, 30, 1000).then(() => {
-    const circle = new Circle(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, CIRCLE_RADIUS, '#ff0000')
-    circle.animateDraw(screen.context, 100, 1000).then(async () => {
-      const t = new Square(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, CIRCLE_RADIUS, 30, '#0000ff')
-      const fv = new Square(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, CIRCLE_RADIUS, 45, '#00ff00')
-      const s = new Square(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, CIRCLE_RADIUS, 60, '#ff00ff')
-      await t.animateDrawDashedLines(screen.context, 200, 25)
-      await fv.animateDrawDashedLines(screen.context, 200, 25)
-      await s.animateDrawDashedLines(screen.context, 200, 25)
-      await t.animateDrawLines(screen.context, Enum.SINE, 30, 1000, 1, 2)
-      await fv.animateDrawLines(screen.context, Enum.SINE, 30, 1000, 2, 2)
-      await s.animateDrawLines(screen.context, Enum.SINE, 30, 1000, 3, 2)
-      await t.animateDrawLines(screen.context, Enum.COSSINE, 30, 1000, 3, 2)
-      await fv.animateDrawLines(screen.context, Enum.COSSINE, 30, 1000, 2, 2)
-      await s.animateDrawLines(screen.context, Enum.COSSINE, 30, 1000, 1, 2)
-    })
-  })
-}
-
-drawCartesianPlane()
